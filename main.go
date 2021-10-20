@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,7 +50,7 @@ func (c *Context) createReplicatedLog(id uint, config Config) error {
 	if err != nil {
 		return fmt.Errorf("Error while creating log: %w", err)
 	}
-	if _, err = io.ReadAll(resp.Body); err != nil {
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
 		return fmt.Errorf("Failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
@@ -73,7 +74,7 @@ func (c *Context) dropReplicatedLog(id uint) error {
 	if err != nil {
 		return fmt.Errorf("Error while dropping log: %w", err)
 	}
-	if _, err = io.ReadAll(resp.Body); err != nil {
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
 		return fmt.Errorf("Failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
@@ -92,7 +93,7 @@ func (c *Context) waitForReplicatedLog(id uint) error {
 		if err != nil {
 			return fmt.Errorf("Error while requesting log status: %w", err)
 		}
-		if _, err = io.ReadAll(resp.Body); err != nil {
+		if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
 			return fmt.Errorf("Failed to read body: %w", err)
 		}
 		defer resp.Body.Close()
@@ -111,7 +112,7 @@ func (c *Context) printStatus(id int) error {
 	if err != nil {
 		return err
 	}
-	if _, err = io.ReadAll(resp.Body); err != nil {
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
 		return fmt.Errorf("Failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
@@ -131,7 +132,7 @@ func (c *Context) insert(id uint, payload interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error while inserting entry: %w", err)
 	}
-	if _, err = io.ReadAll(resp.Body); err != nil {
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
 		return fmt.Errorf("Failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
@@ -184,6 +185,8 @@ func calcResults(total time.Duration, requests []time.Duration) TestResult {
 	return TestResult{
 		Min:               float64(requests[0].Seconds()),
 		Max:               float64(requests[nr-1].Seconds()),
+		Percent99:         requests[int(float64(nr)*0.99)].Seconds(),
+		Percent99p9:       requests[int(float64(nr)*0.999)].Seconds(),
 		Avg:               float64((sum / time.Duration(nr)).Seconds()),
 		RequsterPerSecond: float64(nr) / total.Seconds(),
 		Total:             total.Seconds(),
