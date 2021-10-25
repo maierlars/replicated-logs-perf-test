@@ -242,7 +242,7 @@ func testName(test TestCase) string {
 
 var testCases = []TestCase{
 	{
-		NumberOfRequests: 1000,
+		NumberOfRequests: 10000,
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      2,
@@ -251,7 +251,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 1000,
+		NumberOfRequests: 10000,
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      1,
@@ -260,7 +260,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 1000,
+		NumberOfRequests: 10000,
 		NumberOfThreads:  10,
 		Config: Config{
 			WriteConcern:      2,
@@ -269,7 +269,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 1000,
+		NumberOfRequests: 10000,
 		NumberOfThreads:  100,
 		Config: Config{
 			WriteConcern:      2,
@@ -278,7 +278,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 10000,
+		NumberOfRequests: 100000,
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      2,
@@ -287,7 +287,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 10000,
+		NumberOfRequests: 100000,
 		NumberOfThreads:  10,
 		Config: Config{
 			WriteConcern:      2,
@@ -296,7 +296,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 1000,
+		NumberOfRequests: 10000,
 		NumberOfThreads:  100,
 		Config: Config{
 			WriteConcern:      2,
@@ -305,7 +305,7 @@ var testCases = []TestCase{
 		},
 	},
 	{
-		NumberOfRequests: 1000,
+		NumberOfRequests: 10000,
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      1,
