@@ -200,7 +200,7 @@ func (c *Context) runTest(id uint, test TestCase) (*TestResult, error) {
 	}
 	defer func() {
 		if err := c.dropReplicatedLog(id); err != nil {
-			fmt.Printf("Dropping of replicated log %d failed: %v", id, err)
+			fmt.Fprintf(os.Stderr, "Dropping of replicated log %d failed: %v\n", id, err)
 		}
 	}()
 	if err := c.waitForReplicatedLog(id); err != nil {
@@ -220,7 +220,7 @@ func (c *Context) runTest(id uint, test TestCase) (*TestResult, error) {
 				entry := LogEntry{j, k}
 				req_start := time.Now()
 				if err := c.insert(id, entry); err != nil {
-					fmt.Printf("Request failed: %v", err)
+					panic(err)
 				}
 				results[j*test.NumberOfRequests+k] = time.Since(req_start)
 			}
