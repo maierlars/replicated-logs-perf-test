@@ -25,6 +25,7 @@ type Context struct {
 type Config struct {
 	ReplicationFactor uint `json:"replicationFactor"`
 	WriteConcern      uint `json:"writeConcern"`
+	SoftWriteConcern  uint `json:"softWriteConcern"`
 	WaitForSync       bool `json:"waitForSync"`
 }
 
@@ -246,6 +247,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      2,
+			SoftWriteConcern:  2,
 			ReplicationFactor: 3,
 			WaitForSync:       true,
 		},
@@ -255,6 +257,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      1,
+			SoftWriteConcern:  1,
 			ReplicationFactor: 3,
 			WaitForSync:       true,
 		},
@@ -264,6 +267,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  10,
 		Config: Config{
 			WriteConcern:      2,
+			SoftWriteConcern:  2,
 			ReplicationFactor: 3,
 			WaitForSync:       true,
 		},
@@ -273,6 +277,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  100,
 		Config: Config{
 			WriteConcern:      2,
+			SoftWriteConcern:  2,
 			ReplicationFactor: 3,
 			WaitForSync:       true,
 		},
@@ -282,6 +287,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      2,
+			SoftWriteConcern:  2,
 			ReplicationFactor: 3,
 			WaitForSync:       false,
 		},
@@ -291,6 +297,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  10,
 		Config: Config{
 			WriteConcern:      2,
+			SoftWriteConcern:  2,
 			ReplicationFactor: 3,
 			WaitForSync:       false,
 		},
@@ -300,6 +307,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  100,
 		Config: Config{
 			WriteConcern:      2,
+			SoftWriteConcern:  2,
 			ReplicationFactor: 3,
 			WaitForSync:       false,
 		},
@@ -309,6 +317,7 @@ var testCases = []TestCase{
 		NumberOfThreads:  1,
 		Config: Config{
 			WriteConcern:      1,
+			SoftWriteConcern:  1,
 			ReplicationFactor: 3,
 			WaitForSync:       false,
 		},
