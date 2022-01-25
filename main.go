@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"sort"
 	"sync"
 	"time"
@@ -94,12 +95,18 @@ func (c *Context) waitForReplicatedLog(id uint) error {
 		if err != nil {
 			return fmt.Errorf("Error while requesting log status: %w", err)
 		}
-		if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-			return fmt.Errorf("Failed to read body: %w", err)
+
+		var target struct {
+			Code   int  `json:"code,omitempty"`
+			Error  bool `json:"error,omitempty"`
+			Result struct {
+				LeaderId string `json:"leaderId,omitempty"`
+			} `json:"result,omitempty"`
 		}
+
+		json.NewDecoder(resp.Body).Decode(&target)
 		defer resp.Body.Close()
-		if resp.StatusCode == 200 {
-			resp.Body.Close()
+		if resp.StatusCode == 200 && len(target.Result.LeaderId) > 0 {
 			return nil
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -163,12 +170,16 @@ type TestResult struct {
 	Avg               float64 `json:"avg"`
 	RequsterPerSecond float64 `json:"rps"`
 	Total             float64 `json:"total"`
+	Median            float64 `json:"med"`
 }
 
+const NumberOfTestRuns = 5
+
 type ResultEntry struct {
-	Name   string     `json:"name"`
-	Test   TestCase   `json:"test"`
-	Result TestResult `json:"result"`
+	Name    string                       `json:"name"`
+	Test    TestCase                     `json:"test"`
+	Result  TestResult                   `json:"result"`
+	Details [NumberOfTestRuns]TestResult `json:"details"`
 }
 
 func calcResults(total time.Duration, requests []time.Duration) TestResult {
@@ -188,6 +199,7 @@ func calcResults(total time.Duration, requests []time.Duration) TestResult {
 		Max:               float64(requests[nr-1].Seconds()),
 		Percent99:         requests[int(float64(nr)*0.99)].Seconds(),
 		Percent99p9:       requests[int(float64(nr)*0.999)].Seconds(),
+		Median:            requests[int(float64(nr)*0.5)].Seconds(),
 		Avg:               float64((sum / time.Duration(nr)).Seconds()),
 		RequsterPerSecond: float64(nr) / total.Seconds(),
 		Total:             total.Seconds(),
@@ -329,6 +341,28 @@ type Arguments struct {
 	OutFile  *os.File
 }
 
+func collectMedians(results []TestResult) TestResult {
+	var result TestResult
+	l := len(results)
+	t := reflect.TypeOf(result)
+	for i := 0; i < t.NumField(); i++ {
+		values := make([]float64, l)
+		for k := 0; k < l; k++ {
+			values[k] = reflect.ValueOf(results[k]).Field(i).Float()
+		}
+
+		sort.Slice(values, func(a, b int) bool {
+			return values[a] < values[b]
+		})
+
+		median := values[len(values)/2]
+
+		reflect.ValueOf(&result).Elem().Field(i).SetFloat(median)
+	}
+
+	return result
+}
+
 func runAllTests(args Arguments) error {
 	endpoint, err := url.Parse(args.Endpoint)
 	if err != nil {
@@ -345,14 +379,20 @@ func runAllTests(args Arguments) error {
 	}
 
 	for idx, test := range testCases {
-		result, err := ctx.runTest(550+uint(idx), test)
-		if err != nil {
-			panic(err)
+		var results [NumberOfTestRuns]TestResult
+		for run := uint(0); run < NumberOfTestRuns; run++ {
+			res, err := ctx.runTest(550+uint(idx)*NumberOfTestRuns+run, test)
+			if err != nil {
+				panic(err)
+			}
+			results[run] = *res
 		}
+		result := collectMedians(results[:])
 		out, _ := json.Marshal(ResultEntry{
-			Name:   testName(test),
-			Test:   test,
-			Result: *result,
+			Name:    testName(test),
+			Test:    test,
+			Details: results,
+			Result:  result,
 		})
 		fmt.Fprintf(args.OutFile, "%s\n", out)
 	}
