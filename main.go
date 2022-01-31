@@ -32,7 +32,7 @@ type Config struct {
 
 type Definition struct {
 	Id           uint   `json:"id"`
-	TargetConfig Config `json:"targetConfig"`
+	TargetConfig Config `json:"config"`
 }
 
 func (c *Context) createReplicatedLog(id uint, config Config) error {
@@ -173,7 +173,7 @@ type TestResult struct {
 	Median            float64 `json:"med"`
 }
 
-const NumberOfTestRuns = 5
+const NumberOfTestRuns = uint(5)
 
 type ResultEntry struct {
 	Name    string                       `json:"name"`
@@ -337,8 +337,9 @@ var testCases = []TestCase{
 }
 
 type Arguments struct {
-	Endpoint string
-	OutFile  *os.File
+	Endpoint   string
+	OutFile    *os.File
+	QuickTests bool
 }
 
 func collectMedians(results []TestResult) TestResult {
@@ -378,16 +379,23 @@ func runAllTests(args Arguments) error {
 		Endpoint: *endpoint,
 	}
 
+	actualNumberOfRuns := NumberOfTestRuns
+
 	for idx, test := range testCases {
+		if args.QuickTests {
+			test.NumberOfRequests /= 100
+			actualNumberOfRuns = 1
+		}
+
 		var results [NumberOfTestRuns]TestResult
-		for run := uint(0); run < NumberOfTestRuns; run++ {
+		for run := uint(0); run < actualNumberOfRuns; run++ {
 			res, err := ctx.runTest(550+uint(idx)*NumberOfTestRuns+run, test)
 			if err != nil {
 				panic(err)
 			}
 			results[run] = *res
 		}
-		result := collectMedians(results[:])
+		result := collectMedians(results[:actualNumberOfRuns])
 		out, _ := json.Marshal(ResultEntry{
 			Name:    testName(test),
 			Test:    test,
@@ -402,6 +410,7 @@ func runAllTests(args Arguments) error {
 
 func parseArguments() (*Arguments, error) {
 	outFileName := flag.String("out-file", "-", "specifies the output file, '-' is stdout.")
+	quickTests := flag.Bool("quick", false, "Run quick tests")
 	flag.Parse()
 	args := flag.Args()
 	if len(args) != 1 {
@@ -419,7 +428,7 @@ func parseArguments() (*Arguments, error) {
 		return nil, fmt.Errorf("Failed to open output file: %w", err)
 	}
 
-	return &Arguments{Endpoint: args[0], OutFile: outFile}, nil
+	return &Arguments{Endpoint: args[0], OutFile: outFile, QuickTests: *quickTests}, nil
 }
 
 func main() {
