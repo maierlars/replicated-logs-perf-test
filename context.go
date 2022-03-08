@@ -139,7 +139,7 @@ func (c *Context) insertReplicatedLog(id uint, payload interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 202 {
+	if resp.StatusCode != 201 {
 		return fmt.Errorf("Error while inserting entry: Unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
