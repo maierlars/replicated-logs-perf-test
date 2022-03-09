@@ -263,6 +263,58 @@ var testCases = []TestCase{
 		},
 		Implementation: &PrototypeStateTests{},
 	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  1,
+			Config: Config{
+				WriteConcern:      2,
+				SoftWriteConcern:  2,
+				ReplicationFactor: 3,
+				WaitForSync:       true,
+			},
+		},
+		Implementation: &PrototypeStateTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  10,
+			Config: Config{
+				WriteConcern:      2,
+				SoftWriteConcern:  2,
+				ReplicationFactor: 3,
+				WaitForSync:       true,
+			},
+		},
+		Implementation: &PrototypeStateTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  100,
+			Config: Config{
+				WriteConcern:      2,
+				SoftWriteConcern:  2,
+				ReplicationFactor: 3,
+				WaitForSync:       true,
+			},
+		},
+		Implementation: &PrototypeStateTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  100,
+			Config: Config{
+				WriteConcern:      3,
+				SoftWriteConcern:  3,
+				ReplicationFactor: 3,
+				WaitForSync:       true,
+			},
+		},
+		Implementation: &PrototypeStateTests{},
+	},
 }
 
 type Arguments struct {
