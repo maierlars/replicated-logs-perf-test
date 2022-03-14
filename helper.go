@@ -13,14 +13,24 @@ type TestSettings struct {
 }
 
 type TestResult struct {
-	Min               float64 `json:"min"`
-	Max               float64 `json:"max"`
-	Percent99         float64 `json:"p99"`
-	Percent99p9       float64 `json:"p99.9"`
-	Avg               float64 `json:"avg"`
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+	Avg float64 `json:"avg"`
+
+	Percent10   float64 `json:"p10"`
+	Percent20   float64 `json:"p20"`
+	Percent30   float64 `json:"p30"`
+	Percent40   float64 `json:"p40"`
+	Median      float64 `json:"med"`
+	Percent60   float64 `json:"p60"`
+	Percent70   float64 `json:"p70"`
+	Percent80   float64 `json:"p80"`
+	Percent90   float64 `json:"p90"`
+	Percent99   float64 `json:"p99"`
+	Percent99p9 float64 `json:"p99.9"`
+
 	RequsterPerSecond float64 `json:"rps"`
 	Total             float64 `json:"total"`
-	Median            float64 `json:"med"`
 }
 
 func calcResults(total time.Duration, requests []time.Duration) TestResult {
@@ -35,9 +45,20 @@ func calcResults(total time.Duration, requests []time.Duration) TestResult {
 		sum += time
 	}
 
+	min := float64(requests[0].Seconds())
+	max := float64(requests[nr-1].Seconds())
+
 	return TestResult{
-		Min:               float64(requests[0].Seconds()),
-		Max:               float64(requests[nr-1].Seconds()),
+		Min:               min,
+		Max:               max,
+		Percent10:         requests[int(float64(nr)*0.1)].Seconds(),
+		Percent20:         requests[int(float64(nr)*0.2)].Seconds(),
+		Percent30:         requests[int(float64(nr)*0.3)].Seconds(),
+		Percent40:         requests[int(float64(nr)*0.4)].Seconds(),
+		Percent60:         requests[int(float64(nr)*0.6)].Seconds(),
+		Percent70:         requests[int(float64(nr)*0.7)].Seconds(),
+		Percent80:         requests[int(float64(nr)*0.8)].Seconds(),
+		Percent90:         requests[int(float64(nr)*0.9)].Seconds(),
 		Percent99:         requests[int(float64(nr)*0.99)].Seconds(),
 		Percent99p9:       requests[int(float64(nr)*0.999)].Seconds(),
 		Median:            requests[int(float64(nr)*0.5)].Seconds(),

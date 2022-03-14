@@ -17,7 +17,7 @@ type Config struct {
 	WaitForSync       bool `json:"waitForSync"`
 }
 
-const NumberOfTestRuns = uint(5)
+const NumberOfTestRuns = uint(1)
 
 type ResultEntry struct {
 	Name    string                       `json:"name"`
