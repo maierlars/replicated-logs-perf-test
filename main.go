@@ -321,6 +321,35 @@ type Arguments struct {
 	Endpoint   string
 	OutFile    *os.File
 	QuickTests bool
+	CustomTest *TestCase
+}
+
+func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) {
+
+	actualNumberOfRuns := NumberOfTestRuns
+
+	if args.QuickTests {
+		test.Settings.NumberOfRequests /= 100
+		actualNumberOfRuns = 1
+	}
+
+	var results [NumberOfTestRuns]TestResult
+	for run := uint(0); run < actualNumberOfRuns; run++ {
+		res, err := ctx.runTestImpl(550+uint(idx)*NumberOfTestRuns+run, test)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Test %s, run %d, failed: %v\n", test.Implementation.GetTestName(test.Settings), run, err)
+			return
+		}
+		results[run] = *res
+	}
+	result := collectMedians(results[:actualNumberOfRuns])
+	out, _ := json.Marshal(ResultEntry{
+		Name:    testName(test),
+		Test:    test.Settings,
+		Details: results,
+		Result:  result,
+	})
+	fmt.Fprintf(args.OutFile, "%s\n", out)
 }
 
 func runAllTests(args Arguments) error {
@@ -330,32 +359,13 @@ func runAllTests(args Arguments) error {
 	}
 
 	ctx := NewContext(endpoint)
-	actualNumberOfRuns := NumberOfTestRuns
 
-outerLoop:
-	for idx, test := range testCases {
-		if args.QuickTests {
-			test.Settings.NumberOfRequests /= 100
-			actualNumberOfRuns = 1
+	if args.CustomTest != nil {
+		runTestCase(args, 0, args.CustomTest, ctx)
+	} else {
+		for idx, test := range testCases {
+			runTestCase(args, idx, &test, ctx)
 		}
-
-		var results [NumberOfTestRuns]TestResult
-		for run := uint(0); run < actualNumberOfRuns; run++ {
-			res, err := ctx.runTestImpl(550+uint(idx)*NumberOfTestRuns+run, &test)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Test %s, run %d, failed: %v\n", test.Implementation.GetTestName(test.Settings), run, err)
-				continue outerLoop
-			}
-			results[run] = *res
-		}
-		result := collectMedians(results[:actualNumberOfRuns])
-		out, _ := json.Marshal(ResultEntry{
-			Name:    testName(&test),
-			Test:    test.Settings,
-			Details: results,
-			Result:  result,
-		})
-		fmt.Fprintf(args.OutFile, "%s\n", out)
 	}
 
 	return nil
@@ -364,6 +374,8 @@ outerLoop:
 func parseArguments() (*Arguments, error) {
 	outFileName := flag.String("out-file", "-", "specifies the output file, '-' is stdout.")
 	quickTests := flag.Bool("quick", false, "Run quick tests")
+	customSettings := flag.String("custom", "", "Specify a json object for a custom test case")
+	customImplName := flag.String("impl", "proto", "Select test implementation for custom test. Either `proto` or `log`")
 	flag.Parse()
 	args := flag.Args()
 	if len(args) != 1 {
@@ -381,7 +393,27 @@ func parseArguments() (*Arguments, error) {
 		return nil, fmt.Errorf("Failed to open output file: %w", err)
 	}
 
-	return &Arguments{Endpoint: args[0], OutFile: outFile, QuickTests: *quickTests}, nil
+	var customTest *TestCase = nil
+	if *customSettings != "" {
+		var settings TestSettings
+		var impl TestImplementation
+		if err := json.Unmarshal([]byte(*customSettings), &settings); err != nil {
+			return nil, fmt.Errorf("Failed to load test settings: %v", err)
+		}
+		if *customImplName == "proto" {
+			impl = &PrototypeStateTests{}
+		} else if *customImplName == "log" {
+			impl = &ReplicatedLogsTest{}
+		} else {
+			return nil, fmt.Errorf("Unknown implementation %s", *customImplName)
+		}
+		customTest = &TestCase{
+			Settings:       settings,
+			Implementation: impl,
+		}
+	}
+
+	return &Arguments{Endpoint: args[0], OutFile: outFile, QuickTests: *quickTests, CustomTest: customTest}, nil
 }
 
 func main() {
