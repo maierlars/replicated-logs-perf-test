@@ -278,15 +278,6 @@ func (c *Context) waitForPrototypeState(id uint) error {
 }
 
 func (c *Context) checkPrototypeStateAvailable() error {
-	url := c.Endpoint
-	url.Path = "_api/prototype-state"
-	resp, err := c.Client.Post(url.String(), "", nil)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != 400 {
-		return fmt.Errorf("prototype api not available")
-	}
 	return nil
 }
 
@@ -296,7 +287,7 @@ func NewContext(endpoint *url.URL) *Context {
 			Transport: &http.Transport{
 				MaxIdleConnsPerHost: 1000,
 			},
-			Timeout: 10 * time.Second,
+			Timeout: 30 * time.Second,
 		},
 		Endpoint: *endpoint,
 	}
