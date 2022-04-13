@@ -261,7 +261,7 @@ func (c *Context) prototypeStateSetKey(id uint, key string, value string) error 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 202 {
 		return fmt.Errorf("Error while inserting entry: Unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
