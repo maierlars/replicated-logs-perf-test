@@ -324,7 +324,7 @@ type Arguments struct {
 	CustomTest *TestCase
 }
 
-func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) {
+func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) error {
 
 	actualNumberOfRuns := NumberOfTestRuns
 
@@ -338,7 +338,7 @@ func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) {
 		res, err := ctx.runTestImpl(550+uint(idx)*NumberOfTestRuns+run, test)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Test %s, run %d, failed: %v\n", test.Implementation.GetTestName(test.Settings), run, err)
-			return
+			return err
 		}
 		results[run] = *res
 	}
@@ -350,6 +350,7 @@ func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) {
 		Result:  result,
 	})
 	fmt.Fprintf(args.OutFile, "%s\n", out)
+	return nil
 }
 
 func runAllTests(args Arguments) error {
@@ -359,15 +360,24 @@ func runAllTests(args Arguments) error {
 	}
 
 	ctx := NewContext(endpoint)
-
+	numErrors := 0
 	if args.CustomTest != nil {
-		runTestCase(args, 0, args.CustomTest, ctx)
+		err = runTestCase(args, 0, args.CustomTest, ctx)
+		if err != nil {
+			numErrors += 1
+		}
 	} else {
 		for idx, test := range testCases {
-			runTestCase(args, idx, &test, ctx)
+			err = runTestCase(args, idx, &test, ctx)
+			if err != nil {
+				numErrors += 1
+			}
 		}
 	}
 
+	if numErrors > 0 {
+		return fmt.Errorf("At least one test produced an error")
+	}
 	return nil
 }
 
@@ -420,10 +430,11 @@ func main() {
 	args, err := parseArguments()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	if err := runAllTests(*args); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to run all tests: %v\n", err)
+		os.Exit(1)
 	}
 }
