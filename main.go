@@ -11,10 +11,9 @@ import (
 )
 
 type Config struct {
-	ReplicationFactor uint `json:"replicationFactor"`
-	WriteConcern      uint `json:"writeConcern"`
-	SoftWriteConcern  uint `json:"softWriteConcern"`
-	WaitForSync       bool `json:"waitForSync"`
+	WriteConcern     uint `json:"writeConcern"`
+	SoftWriteConcern uint `json:"softWriteConcern"`
+	WaitForSync      bool `json:"waitForSync"`
 }
 
 const NumberOfTestRuns = uint(1)
@@ -84,11 +83,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -97,11 +96,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      1,
-				SoftWriteConcern:  1,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     1,
+				SoftWriteConcern: 1,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -110,11 +109,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  10,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -123,11 +122,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  100,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -136,11 +135,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 100000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -149,11 +148,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 100000,
 			NumberOfThreads:  10,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -162,11 +161,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  100,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -175,11 +174,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      1,
-				SoftWriteConcern:  1,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     1,
+				SoftWriteConcern: 1,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
@@ -189,11 +188,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      1,
-				SoftWriteConcern:  1,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     1,
+				SoftWriteConcern: 1,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -202,11 +201,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  10,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      1,
-				SoftWriteConcern:  1,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     1,
+				SoftWriteConcern: 1,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -215,11 +214,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  100,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      1,
-				SoftWriteConcern:  1,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     1,
+				SoftWriteConcern: 1,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -228,11 +227,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -241,11 +240,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  10,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -254,11 +253,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  100,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       false,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      false,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -267,11 +266,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -280,11 +279,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  10,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -293,11 +292,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  100,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      2,
-				SoftWriteConcern:  2,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     2,
+				SoftWriteConcern: 2,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &PrototypeStateTests{},
@@ -306,11 +305,11 @@ var testCases = []TestCase{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  100,
+			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:      3,
-				SoftWriteConcern:  3,
-				ReplicationFactor: 3,
-				WaitForSync:       true,
+				WriteConcern:     3,
+				SoftWriteConcern: 3,
+				WaitForSync:      true,
 			},
 		},
 		Implementation: &PrototypeStateTests{},

@@ -9,6 +9,7 @@ import (
 type TestSettings struct {
 	NumberOfRequests int    `json:"numberOfRequests"`
 	NumberOfThreads  int    `json:"numberOfThreads"`
+	NumberOfServers  int    `json:"numberOfServers"`
 	Config           Config `json:"config"`
 }
 

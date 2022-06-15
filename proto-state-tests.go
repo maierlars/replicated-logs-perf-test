@@ -21,7 +21,7 @@ func (PrototypeStateTests) RunTestThread(ctx *Context, id uint, test TestSetting
 }
 
 func (PrototypeStateTests) GetTestName(test TestSettings) string {
-	name := fmt.Sprintf("proto-insert-c%d-r%d-wc%d", test.NumberOfThreads, test.Config.ReplicationFactor, test.Config.WriteConcern)
+	name := fmt.Sprintf("proto-insert-c%d-r%d-wc%d", test.NumberOfThreads, test.NumberOfServers, test.Config.WriteConcern)
 	if test.Config.WaitForSync {
 		name = name + "-ws"
 	}
@@ -33,7 +33,7 @@ func (PrototypeStateTests) SetupTest(ctx *Context, id uint, test TestSettings) e
 		return err
 	}
 
-	if err := ctx.createReplicatedState(id, test.Config, "prototype"); err != nil {
+	if err := ctx.createReplicatedState(id, test.Config, "prototype", test.NumberOfServers); err != nil {
 		return err
 	}
 

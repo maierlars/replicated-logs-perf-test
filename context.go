@@ -181,7 +181,7 @@ func (c *Context) getDatabaseServers() (error, []string) {
 	return nil, result
 }
 
-func (c *Context) createReplicatedState(id uint, config Config, implementation string) error {
+func (c *Context) createReplicatedState(id uint, config Config, implementation string, numberOfServers int) error {
 	type Implementation struct {
 		Type string `json:"type"`
 	}
@@ -211,7 +211,7 @@ func (c *Context) createReplicatedState(id uint, config Config, implementation s
 		Participants: make(map[string]struct{}),
 	}
 
-	for i := 0; i < int(config.ReplicationFactor); i++ {
+	for i := 0; i < numberOfServers; i++ {
 		def.Participants[dbservers[i]] = struct{}{}
 	}
 
