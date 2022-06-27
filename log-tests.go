@@ -26,7 +26,7 @@ func (ReplicatedLogsTest) RunTestThread(ctx *Context, id uint, test TestSettings
 }
 
 func (ReplicatedLogsTest) GetTestName(test TestSettings) string {
-	name := fmt.Sprintf("insert-c%d-r%d-wc%d", test.NumberOfThreads, test.NumberOfRequests, test.Config.WriteConcern)
+	name := fmt.Sprintf("insert-c%d-r%d-wc%d", test.NumberOfThreads, test.NumberOfServers, test.Config.WriteConcern)
 	if test.Config.WaitForSync {
 		name = name + "-ws"
 	}
