@@ -81,7 +81,7 @@ type TestCase struct {
 }
 
 var testCases = []TestCase{
-	/*{
+	{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
@@ -184,7 +184,8 @@ var testCases = []TestCase{
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
-	},*/
+	},
+
 	// Document tests
 	{
 		Settings: TestSettings{
