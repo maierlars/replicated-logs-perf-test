@@ -11,9 +11,11 @@ import (
 )
 
 type Config struct {
-	WriteConcern     uint `json:"writeConcern"`
-	SoftWriteConcern uint `json:"softWriteConcern"`
-	WaitForSync      bool `json:"waitForSync"`
+	WriteConcern       uint   `json:"writeConcern"`
+	SoftWriteConcern   uint   `json:"softWriteConcern,omitempty"`
+	WaitForSync        bool   `json:"waitForSync"`
+	NumberOfShards     uint   `json:"numberOfShards,omitempty"`
+	ReplicationVersion string `json:"replicationVersion,omitempty"`
 }
 
 const NumberOfTestRuns = uint(1)
@@ -79,7 +81,7 @@ type TestCase struct {
 }
 
 var testCases = []TestCase{
-	{
+	/*{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
@@ -182,46 +184,21 @@ var testCases = []TestCase{
 			},
 		},
 		Implementation: &ReplicatedLogsTest{},
-	},
-	// Replicated State Tests
+	},*/
+	// Document tests
 	{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
 			NumberOfThreads:  1,
 			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:     1,
-				SoftWriteConcern: 1,
-				WaitForSync:      false,
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
 			},
 		},
-		Implementation: &PrototypeStateTests{},
-	},
-	{
-		Settings: TestSettings{
-			NumberOfRequests: 10000,
-			NumberOfThreads:  10,
-			NumberOfServers:  3,
-			Config: Config{
-				WriteConcern:     1,
-				SoftWriteConcern: 1,
-				WaitForSync:      false,
-			},
-		},
-		Implementation: &PrototypeStateTests{},
-	},
-	{
-		Settings: TestSettings{
-			NumberOfRequests: 10000,
-			NumberOfThreads:  100,
-			NumberOfServers:  3,
-			Config: Config{
-				WriteConcern:     1,
-				SoftWriteConcern: 1,
-				WaitForSync:      false,
-			},
-		},
-		Implementation: &PrototypeStateTests{},
+		Implementation: &DocumentTests{},
 	},
 	{
 		Settings: TestSettings{
@@ -229,12 +206,13 @@ var testCases = []TestCase{
 			NumberOfThreads:  1,
 			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:     2,
-				SoftWriteConcern: 2,
-				WaitForSync:      false,
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
 			},
 		},
-		Implementation: &PrototypeStateTests{},
+		Implementation: &DocumentTests{},
 	},
 	{
 		Settings: TestSettings{
@@ -242,38 +220,13 @@ var testCases = []TestCase{
 			NumberOfThreads:  10,
 			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:     2,
-				SoftWriteConcern: 2,
-				WaitForSync:      false,
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
 			},
 		},
-		Implementation: &PrototypeStateTests{},
-	},
-	{
-		Settings: TestSettings{
-			NumberOfRequests: 10000,
-			NumberOfThreads:  100,
-			NumberOfServers:  3,
-			Config: Config{
-				WriteConcern:     2,
-				SoftWriteConcern: 2,
-				WaitForSync:      false,
-			},
-		},
-		Implementation: &PrototypeStateTests{},
-	},
-	{
-		Settings: TestSettings{
-			NumberOfRequests: 10000,
-			NumberOfThreads:  1,
-			NumberOfServers:  3,
-			Config: Config{
-				WriteConcern:     2,
-				SoftWriteConcern: 2,
-				WaitForSync:      true,
-			},
-		},
-		Implementation: &PrototypeStateTests{},
+		Implementation: &DocumentTests{},
 	},
 	{
 		Settings: TestSettings{
@@ -281,12 +234,13 @@ var testCases = []TestCase{
 			NumberOfThreads:  10,
 			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:     2,
-				SoftWriteConcern: 2,
-				WaitForSync:      true,
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
 			},
 		},
-		Implementation: &PrototypeStateTests{},
+		Implementation: &DocumentTests{},
 	},
 	{
 		Settings: TestSettings{
@@ -294,12 +248,13 @@ var testCases = []TestCase{
 			NumberOfThreads:  100,
 			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:     2,
-				SoftWriteConcern: 2,
-				WaitForSync:      true,
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
 			},
 		},
-		Implementation: &PrototypeStateTests{},
+		Implementation: &DocumentTests{},
 	},
 	{
 		Settings: TestSettings{
@@ -307,12 +262,13 @@ var testCases = []TestCase{
 			NumberOfThreads:  100,
 			NumberOfServers:  3,
 			Config: Config{
-				WriteConcern:     3,
-				SoftWriteConcern: 3,
-				WaitForSync:      true,
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
 			},
 		},
-		Implementation: &PrototypeStateTests{},
+		Implementation: &DocumentTests{},
 	},
 }
 
@@ -320,7 +276,6 @@ type Arguments struct {
 	Endpoint   string
 	OutFile    *os.File
 	QuickTests bool
-	CustomTest *TestCase
 }
 
 func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) error {
@@ -355,27 +310,21 @@ func runTestCase(args Arguments, idx int, test *TestCase, ctx *Context) error {
 func runAllTests(args Arguments) error {
 	endpoint, err := url.Parse(args.Endpoint)
 	if err != nil {
-		return fmt.Errorf("Failed to parse endpoitn: %w", err)
+		return fmt.Errorf("failed to parse endpoitn: %w", err)
 	}
 
 	ctx := NewContext(endpoint)
 	numErrors := 0
-	if args.CustomTest != nil {
-		err = runTestCase(args, 0, args.CustomTest, ctx)
+
+	for idx, test := range testCases {
+		err = runTestCase(args, idx, &test, ctx)
 		if err != nil {
 			numErrors += 1
-		}
-	} else {
-		for idx, test := range testCases {
-			err = runTestCase(args, idx, &test, ctx)
-			if err != nil {
-				numErrors += 1
-			}
 		}
 	}
 
 	if numErrors > 0 {
-		return fmt.Errorf("At least one test produced an error")
+		return fmt.Errorf("at least one test produced an error")
 	}
 	return nil
 }
@@ -383,12 +332,10 @@ func runAllTests(args Arguments) error {
 func parseArguments() (*Arguments, error) {
 	outFileName := flag.String("out-file", "-", "specifies the output file, '-' is stdout.")
 	quickTests := flag.Bool("quick", false, "Run quick tests")
-	customSettings := flag.String("custom", "", "Specify a json object for a custom test case")
-	customImplName := flag.String("impl", "proto", "Select test implementation for custom test. Either `proto` or `log`")
 	flag.Parse()
 	args := flag.Args()
 	if len(args) != 1 {
-		return nil, fmt.Errorf("Expected a single position argument, found %d", len(args))
+		return nil, fmt.Errorf("expected a single position argument, found %d", len(args))
 	}
 
 	outFile, err := func() (*os.File, error) {
@@ -399,30 +346,10 @@ func parseArguments() (*Arguments, error) {
 		return os.Stdout, nil
 	}()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to open output file: %w", err)
+		return nil, fmt.Errorf("failed to open output file: %w", err)
 	}
 
-	var customTest *TestCase = nil
-	if *customSettings != "" {
-		var settings TestSettings
-		var impl TestImplementation
-		if err := json.Unmarshal([]byte(*customSettings), &settings); err != nil {
-			return nil, fmt.Errorf("Failed to load test settings: %v", err)
-		}
-		if *customImplName == "proto" {
-			impl = &PrototypeStateTests{}
-		} else if *customImplName == "log" {
-			impl = &ReplicatedLogsTest{}
-		} else {
-			return nil, fmt.Errorf("Unknown implementation %s", *customImplName)
-		}
-		customTest = &TestCase{
-			Settings:       settings,
-			Implementation: impl,
-		}
-	}
-
-	return &Arguments{Endpoint: args[0], OutFile: outFile, QuickTests: *quickTests, CustomTest: customTest}, nil
+	return &Arguments{Endpoint: args[0], OutFile: outFile, QuickTests: *quickTests}, nil
 }
 
 func main() {

@@ -8,15 +8,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
-	"strings"
 	"time"
 )
 
 type Context struct {
-	Endpoint  url.URL
-	Client    *http.Client
-	DBServers []string
+	Endpoint url.URL
+	Client   *http.Client
+}
+
+type DatabaseContext struct {
+	Context
+	Database string
 }
 
 func (c *Context) createReplicatedLog(id uint, config Config) error {
@@ -32,14 +34,14 @@ func (c *Context) createReplicatedLog(id uint, config Config) error {
 
 	body, err := json.Marshal(def)
 	if err != nil {
-		return fmt.Errorf("Error while creating log: %w", err)
+		return fmt.Errorf("error while creating log: %w", err)
 	}
 
 	url := c.Endpoint
 	url.Path = "_api/log"
 	resp, err := c.Client.Post(url.String(), "application/json", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("Error while creating log: %w", err)
+		return fmt.Errorf("error while creating log: %w", err)
 	}
 	var target struct {
 		Code         int    `json:"code,omitempty"`
@@ -47,12 +49,12 @@ func (c *Context) createReplicatedLog(id uint, config Config) error {
 		ErrorMessage string `json:"errorMessage,omitempty"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&target); err != nil {
-		return fmt.Errorf("Error while reading the response: %v", err)
+		return fmt.Errorf("error while reading the response: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 || target.Error {
-		return fmt.Errorf("Error while creating log: status-code=%d, error-code=%d, message=%s", resp.StatusCode, target.Code, target.ErrorMessage)
+		return fmt.Errorf("error while creating log: status-code=%d, error-code=%d, message=%s", resp.StatusCode, target.Code, target.ErrorMessage)
 	}
 
 	return nil
@@ -63,20 +65,20 @@ func (c *Context) dropReplicatedLog(id uint) error {
 	url.Path = fmt.Sprintf("_api/log/%d", id)
 	req, err := http.NewRequest("DELETE", url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("Error while dropping log: %w", err)
+		return fmt.Errorf("error while dropping log: %w", err)
 	}
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error while dropping log: %w", err)
+		return fmt.Errorf("error while dropping log: %w", err)
 	}
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("Failed to read body: %w", err)
+		return fmt.Errorf("failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 202 {
-		return fmt.Errorf("Error while dropping log: Unexpected status code: %d", resp.StatusCode)
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error while dropping log: Unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
 }
@@ -87,7 +89,7 @@ func (c *Context) waitForReplicatedLog(id uint) error {
 		url.Path = fmt.Sprintf("_api/log/%d", id)
 		resp, err := c.Client.Get(url.String())
 		if err != nil {
-			return fmt.Errorf("Error while requesting log status: %w", err)
+			return fmt.Errorf("error while requesting log status: %w", err)
 		}
 
 		var target struct {
@@ -115,7 +117,7 @@ func (c *Context) printStatus(id int) error {
 		return err
 	}
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("Failed to read body: %w", err)
+		return fmt.Errorf("failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -126,158 +128,139 @@ func (c *Context) printStatus(id int) error {
 func (c *Context) insertReplicatedLog(id uint, payload interface{}) error {
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("Error while inserting entry: %w", err)
+		return fmt.Errorf("error while inserting entry: %w", err)
 	}
 	url := c.Endpoint
 	url.Path = fmt.Sprintf("_api/log/%d/insert", id)
 	resp, err := c.Client.Post(url.String(), "application/json", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("Error while inserting entry: %w", err)
+		return fmt.Errorf("error while inserting entry: %w", err)
 	}
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("Failed to read body: %w", err)
+		return fmt.Errorf("failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 && resp.StatusCode != 202 {
-		return fmt.Errorf("Error while inserting entry: Unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("error while inserting entry: Unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
 }
 
-func (c *Context) getDatabaseServers() (error, []string) {
-	if c.DBServers != nil {
-		return nil, c.DBServers
-	}
-
-	url := c.Endpoint
-	url.Path = "_admin/cluster/health"
-	resp, err := c.Client.Get(url.String())
-	if err != nil {
-		return fmt.Errorf("Error while requesting database servers: %w", err), nil
-	}
-
-	var health struct {
-		Code   int                    `json:"code,omitempty"`
-		Error  bool                   `json:"error,omitempty"`
-		Health map[string]interface{} `json:"Health,omitempty"`
-	}
-
-	json.NewDecoder(resp.Body).Decode(&health)
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error while requesting database servers: unexpected status code %d", resp.StatusCode), nil
-	}
-
-	var result []string
-	for key := range health.Health {
-		if strings.HasPrefix(key, "PRMR-") {
-			result = append(result, key)
-		}
-	}
-
-	c.DBServers = result
-	fmt.Fprintf(os.Stderr, "Using Database Server: %v\n", result)
-	return nil, result
+type DatabaseOptions struct {
+	ReplicationVersion *string `json:"replicationVersion,omitempty"`
 }
 
-func (c *Context) createReplicatedState(id uint, config Config, implementation string, numberOfServers int) error {
-	type Implementation struct {
-		Type string `json:"type"`
-	}
-	type Properties struct {
-		Implementation Implementation `json:"implementation"`
-	}
-	type Definition struct {
-		Id           uint                `json:"id"`
-		Config       Config              `json:"config"`
-		Properties   Properties          `json:"properties"`
-		Participants map[string]struct{} `json:"participants"`
+func (c *Context) createDatabase(name string, opts *DatabaseOptions) error {
+
+	type CreateDatabaseBody struct {
+		Name    string           `json:"name"`
+		Options *DatabaseOptions `json:"options,omitempty"`
 	}
 
-	err, dbservers := c.getDatabaseServers()
+	req := CreateDatabaseBody{name, opts}
+	body, err := json.Marshal(req)
 	if err != nil {
-		return err
-	}
-
-	def := Definition{
-		Id:     id,
-		Config: config,
-		Properties: Properties{
-			Implementation: Implementation{
-				Type: implementation,
-			},
-		},
-		Participants: make(map[string]struct{}),
-	}
-
-	for i := 0; i < numberOfServers; i++ {
-		def.Participants[dbservers[i]] = struct{}{}
-	}
-
-	body, err := json.Marshal(def)
-	if err != nil {
-		return fmt.Errorf("Error while creating log: %w", err)
-	}
-
-	url := c.Endpoint
-	url.Path = "_api/replicated-state"
-	resp, err := c.Client.Post(url.String(), "application/json", bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("Error while creating replicated state: %w", err)
-	}
-	var target struct {
-		Code         int    `json:"code,omitempty"`
-		Error        bool   `json:"error,omitempty"`
-		ErrorMessage string `json:"errorMessage,omitempty"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&target); err != nil {
-		return fmt.Errorf("Error while reading the response: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 || target.Error {
-		return fmt.Errorf("Error while creating replicated state: status-code=%d, error-code=%d, message=%s", resp.StatusCode, target.Code, target.ErrorMessage)
-	}
-
-	return nil
-}
-
-func (c *Context) prototypeStateSetKey(id uint, key string, value string) error {
-	payload := make(map[string]string)
-	payload[key] = value
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("Error while inserting entry: %w", err)
+		return fmt.Errorf("error while creating database: %w", err)
 	}
 	url := c.Endpoint
-	url.Path = fmt.Sprintf("_api/prototype-state/%d/insert", id)
+	url.Path = "_api/database"
 	resp, err := c.Client.Post(url.String(), "application/json", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("Error while inserting entry: %w", err)
+		return fmt.Errorf("error while creating database: %w", err)
 	}
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("Failed to read body: %w", err)
+		return fmt.Errorf("failed to read body: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 && resp.StatusCode != 202 {
-		return fmt.Errorf("Error while inserting entry: Unexpected status code: %d", resp.StatusCode)
+	if resp.StatusCode != 201 {
+		return fmt.Errorf("error while creating database: %d", resp.StatusCode)
 	}
 	return nil
 }
 
-func (c *Context) waitForPrototypeState(id uint) error {
-	for {
-		if err := c.prototypeStateSetKey(id, "_test", "value"); err == nil {
-			return nil
-		}
+func (c *Context) dropDatabase(name string) error {
 
-		time.Sleep(500 * time.Millisecond)
+	url := c.Endpoint
+	url.Path = fmt.Sprintf("_api/database/%s", name)
+	req, err := http.NewRequest("DELETE", url.String(), nil)
+	if err != nil {
+		return fmt.Errorf("error while dropping database: %w", err)
+	}
+
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error while dropping database: %w", err)
+	}
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
+		return fmt.Errorf("failed to read body: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error while dropping database: unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func (c *Context) openDatabase(dbname string) *DatabaseContext {
+	return &DatabaseContext{
+		Context: *c, Database: dbname,
 	}
 }
 
-func (c *Context) checkPrototypeStateAvailable() error {
+type CreateCollectionOptions struct {
+	Name              string `json:"name"`
+	WriteConcern      uint   `json:"writeConcern"`
+	ReplicationFactor uint   `json:"replicationFactor"`
+	NumberOfShards    uint   `json:"numberOfShards"`
+	WaitForSync       bool   `json:"waitForSync"`
+}
+
+func (c *DatabaseContext) createCollection(opts CreateCollectionOptions) error {
+
+	body, err := json.Marshal(opts)
+	if err != nil {
+		return fmt.Errorf("error while creating collection: %w", err)
+	}
+	url := c.Endpoint
+	url.Path = fmt.Sprintf("/_db/%s/_api/collection", c.Database)
+	resp, err := c.Client.Post(url.String(), "application/json", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("error while creating collection: %w", err)
+	}
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
+		return fmt.Errorf("failed to read body: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error while creating collection: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func (c *DatabaseContext) insertDocument(collection string, doc interface{}) error {
+
+	body, err := json.Marshal(doc)
+	if err != nil {
+		return fmt.Errorf("error while creating collection: %w", err)
+	}
+	url := c.Endpoint
+	url.Path = fmt.Sprintf("/_db/%s/_api/document/c", c.Database)
+	resp, err := c.Client.Post(url.String(), "application/json", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("error while creating document: %w", err)
+	}
+	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
+		return fmt.Errorf("failed to read body: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 && resp.StatusCode != 202 {
+		return fmt.Errorf("error while creating document: %d", resp.StatusCode)
+	}
 	return nil
 }
 
