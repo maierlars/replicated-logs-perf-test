@@ -245,7 +245,7 @@ var testCases = []TestCase{
 	},
 	{
 		Settings: TestSettings{
-			NumberOfRequests: 10000,
+			NumberOfRequests: 2000,
 			NumberOfThreads:  100,
 			NumberOfServers:  3,
 			Config: Config{
@@ -259,7 +259,7 @@ var testCases = []TestCase{
 	},
 	{
 		Settings: TestSettings{
-			NumberOfRequests: 10000,
+			NumberOfRequests: 2000,
 			NumberOfThreads:  100,
 			NumberOfServers:  3,
 			Config: Config{

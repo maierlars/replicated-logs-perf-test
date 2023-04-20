@@ -77,7 +77,7 @@ func (c *Context) dropReplicatedLog(id uint) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 202 {
 		return fmt.Errorf("error while dropping log: Unexpected status code: %d", resp.StatusCode)
 	}
 	return nil

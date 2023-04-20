@@ -33,7 +33,8 @@ func (s *DocumentTests) RunTestThread(ctx *Context, id uint, test TestSettings, 
 }
 
 func (DocumentTests) GetTestName(test TestSettings) string {
-	name := fmt.Sprintf("doc-insert-c%d-r%d-wc%d-v%s", test.NumberOfThreads, test.NumberOfServers, test.Config.WriteConcern, test.Config.ReplicationVersion)
+	name := fmt.Sprintf("doc-insert-c%d-r%d-wc%d-s%d-v%s", test.NumberOfThreads, test.NumberOfServers,
+		test.Config.WriteConcern, test.Config.NumberOfShards, test.Config.ReplicationVersion)
 	if test.Config.WaitForSync {
 		name = name + "-ws"
 	}
