@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -10,20 +11,33 @@ type DocumentTests struct {
 }
 
 type MyDocument struct {
-	Value    string `json:"value"`
-	ThreadNo int    `json:"threadNo"`
-	Index    int    `json:"index"`
+	Value      string `json:"value"`
+	ThreadNo   int    `json:"threadNo"`
+	Index      int    `json:"index"`
+	BatchIndex int    `json:"batchIndex"`
 }
 
-const Value string = "SomeRandomPayloadString"
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
 
 func (s *DocumentTests) RunTestThread(ctx *Context, id uint, test TestSettings, threadNo int, results []time.Duration) error {
 	dbctx := ctx.openDatabase(s.dbname)
-
+	value := randSeq(int(test.Config.DocumentSize))
+	entries := make([]MyDocument, test.Config.BatchSize)
 	for k := 0; k < test.NumberOfRequests; k++ {
-		entry := [1]MyDocument{{Value, threadNo, k}}
+		for j := 0; j < int(test.Config.BatchSize); j++ {
+			entries[j] = MyDocument{value, threadNo, k, j}
+		}
+
 		req_start := time.Now()
-		if err := dbctx.insertDocument(CollectionName, entry); err != nil {
+		if err := dbctx.insertDocument(CollectionName, entries); err != nil {
 			return fmt.Errorf("failed to insert document during test: %v", err)
 		}
 		results[k] = time.Since(req_start)
@@ -35,6 +49,12 @@ func (s *DocumentTests) RunTestThread(ctx *Context, id uint, test TestSettings, 
 func (DocumentTests) GetTestName(test TestSettings) string {
 	name := fmt.Sprintf("doc-insert-c%d-r%d-wc%d-s%d-v%s", test.NumberOfThreads, test.NumberOfServers,
 		test.Config.WriteConcern, test.Config.NumberOfShards, test.Config.ReplicationVersion)
+	if test.Config.BatchSize > 1 {
+		name = name + fmt.Sprintf("-b%d", test.Config.BatchSize)
+	}
+	if test.Config.DocumentSize > 64 {
+		name = name + fmt.Sprintf("-ds%d", test.Config.DocumentSize)
+	}
 	if test.Config.WaitForSync {
 		name = name + "-ws"
 	}

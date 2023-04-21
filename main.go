@@ -16,6 +16,8 @@ type Config struct {
 	WaitForSync        bool   `json:"waitForSync"`
 	NumberOfShards     uint   `json:"numberOfShards,omitempty"`
 	ReplicationVersion string `json:"replicationVersion,omitempty"`
+	DocumentSize       uint   `json:"documentSize,omitempty"`
+	BatchSize          uint   `json:"batchSize,omitempty"`
 }
 
 const NumberOfTestRuns = uint(1)
@@ -186,7 +188,7 @@ var testCases = []TestCase{
 		Implementation: &ReplicatedLogsTest{},
 	},
 
-	// Document tests
+	// Single Document tests
 	{
 		Settings: TestSettings{
 			NumberOfRequests: 10000,
@@ -197,6 +199,8 @@ var testCases = []TestCase{
 				NumberOfShards:     3,
 				ReplicationVersion: "2",
 				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       64,
 			},
 		},
 		Implementation: &DocumentTests{},
@@ -211,6 +215,8 @@ var testCases = []TestCase{
 				NumberOfShards:     3,
 				ReplicationVersion: "1",
 				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       64,
 			},
 		},
 		Implementation: &DocumentTests{},
@@ -225,6 +231,8 @@ var testCases = []TestCase{
 				NumberOfShards:     3,
 				ReplicationVersion: "2",
 				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       64,
 			},
 		},
 		Implementation: &DocumentTests{},
@@ -239,6 +247,8 @@ var testCases = []TestCase{
 				NumberOfShards:     3,
 				ReplicationVersion: "1",
 				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       64,
 			},
 		},
 		Implementation: &DocumentTests{},
@@ -253,6 +263,8 @@ var testCases = []TestCase{
 				NumberOfShards:     3,
 				ReplicationVersion: "2",
 				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       64,
 			},
 		},
 		Implementation: &DocumentTests{},
@@ -267,6 +279,204 @@ var testCases = []TestCase{
 				NumberOfShards:     3,
 				ReplicationVersion: "1",
 				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+
+	// Batch Document tests
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  1,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
+				BatchSize:          64,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  1,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
+				BatchSize:          64,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  10,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
+				BatchSize:          64,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  10,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
+				BatchSize:          64,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 2000,
+			NumberOfThreads:  100,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
+				BatchSize:          64,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 2000,
+			NumberOfThreads:  100,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
+				BatchSize:          64,
+				DocumentSize:       64,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+
+	// Huge Document tests
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  1,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       4096,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  1,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       4096,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  10,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       4096,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 10000,
+			NumberOfThreads:  10,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       4096,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 2000,
+			NumberOfThreads:  100,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "2",
+				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       4096,
+			},
+		},
+		Implementation: &DocumentTests{},
+	},
+	{
+		Settings: TestSettings{
+			NumberOfRequests: 2000,
+			NumberOfThreads:  100,
+			NumberOfServers:  3,
+			Config: Config{
+				WriteConcern:       2,
+				NumberOfShards:     3,
+				ReplicationVersion: "1",
+				WaitForSync:        true,
+				BatchSize:          1,
+				DocumentSize:       4096,
 			},
 		},
 		Implementation: &DocumentTests{},
