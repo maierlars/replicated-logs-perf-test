@@ -47,8 +47,8 @@ func (s *DocumentTests) RunTestThread(ctx *Context, id uint, test TestSettings, 
 }
 
 func (DocumentTests) GetTestName(test TestSettings) string {
-	name := fmt.Sprintf("doc-insert-c%d-r%d-wc%d-s%d-v%s", test.NumberOfThreads, test.NumberOfServers,
-		test.Config.WriteConcern, test.Config.NumberOfShards, test.Config.ReplicationVersion)
+	name := fmt.Sprintf("doc-insert-c%d-r%d-wc%d-s%d", test.NumberOfThreads, test.NumberOfServers,
+		test.Config.WriteConcern, test.Config.NumberOfShards)
 	if test.Config.BatchSize > 1 {
 		name = name + fmt.Sprintf("-b%d", test.Config.BatchSize)
 	}
@@ -58,6 +58,7 @@ func (DocumentTests) GetTestName(test TestSettings) string {
 	if test.Config.WaitForSync {
 		name = name + "-ws"
 	}
+	name = name + fmt.Sprintf("-v%s", test.Config.ReplicationVersion)
 	return name
 }
 
